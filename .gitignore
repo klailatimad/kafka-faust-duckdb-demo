@@ -18,3 +18,17 @@ venv/
 
 # VSCode
 .vscode/
+
+
+# Ignore DuckDB files (optional)
+duckdb-data/*.duckdb
+duckdb-data/*.wal
+duckdb-data/*?*
+
+# Ignore Python bytecode
+__pycache__/
+*.pyc
+
+# Ignore Streamlit cache
+dashboard/.streamlit/
+dashboard/.cache/
