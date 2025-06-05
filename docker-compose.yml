@@ -35,7 +35,8 @@ services:
         condition: service_healthy
     restart: on-failure
     volumes:
-      - ./duckdb-data:/data
+      - ./faust-app:/app
+      - ./duckdb-data:/duckdb-data
 
   duckdb:
     image: python:3.10-slim
@@ -43,3 +44,14 @@ services:
       - ./duckdb-scripts:/app
     working_dir: /app
     command: ["sleep", "infinity"]
+
+  dashboard:
+    image: python:3.10-slim
+    container_name: dashboard
+    working_dir: /app
+    volumes:
+      - ./dashboard:/app
+      - ./duckdb-data:/duckdb-data
+    ports:
+      - "8501:8501"
+    command: bash -c "pip install streamlit duckdb pandas && streamlit run dashboard.py --server.port 8501 --server.address 0.0.0.0"
