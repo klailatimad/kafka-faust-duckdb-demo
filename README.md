@@ -9,6 +9,13 @@ This project is a real-time telematics pipeline that simulates vehicle location 
 - **DuckDB**: Embedded analytical database to store event data.
 - **Streamlit**: Dashboard to visualize vehicle movement and speed in real-time.
 
+## 📊 Architecture Overview
+
+<!-- #MAKE THE IMAGE SMALLER BY 50% -->
+<div>
+    <img src="architecture.png" alt="Architecture Diagram" width="60%">
+</div>
+
 ## 🚀 How to Run
 
 > **Requirements**: Docker + Docker Compose
