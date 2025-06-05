@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+.env
+
+# Docker
+*.log
+*.pid
+*.db
+**/.DS_Store
+
+# Faust logs
+*.out
+*.bak
+
+# VSCode
+.vscode/
