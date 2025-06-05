@@ -1,8 +1,11 @@
 import faust
 import duckdb
-import os
+from pathlib import Path
 
-app = faust.App('telematics-app', broker='kafka://kafka:29092')
+app = faust.App(
+    'telematics-app',
+    broker='kafka://kafka:29092',
+)
 
 class Telematics(faust.Record, serializer='json'):
     vehicle_id: str
@@ -11,31 +14,27 @@ class Telematics(faust.Record, serializer='json'):
     lon: float
     speed_kmh: int
 
-stream = app.topic('telematics', value_type=Telematics)
+topic = app.topic('telematics', value_type=Telematics)
 
-# Initialize DuckDB (store in shared volume)
-db_path = "/data/telematics.duckdb"
-os.makedirs("/data", exist_ok=True)  # Ensure directory exists
-con = duckdb.connect(db_path)
+DUCKDB_PATH = Path("/duckdb-data/telematics.duckdb")
 
-# Create table if it doesn't exist
-con.execute("""
-CREATE TABLE IF NOT EXISTS telematics (
-    vehicle_id TEXT,
-    timestamp BIGINT,
-    lat DOUBLE,
-    lon DOUBLE,
-    speed_kmh INT
-)
-""")
-
-@app.agent(stream)
-async def process(events):
-    async for event in events:
-        if event.speed_kmh > 100:
-            print(f"{event.vehicle_id} speeding at {event.speed_kmh} km/h!")
-
-        # Save to DuckDB
-        con.execute("""
-            INSERT INTO telematics VALUES (?, ?, ?, ?, ?)
-        """, (event.vehicle_id, event.timestamp, event.lat, event.lon, event.speed_kmh))
+@app.agent(topic)
+async def process(stream):
+    conn = duckdb.connect(str(DUCKDB_PATH))
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS telematics_events (
+            event_time TIMESTAMP,
+            vehicle_id TEXT,
+            timestamp BIGINT,
+            lat DOUBLE,
+            lon DOUBLE,
+            speed_kmh INTEGER
+        );
+    """)
+    
+    async for record in stream:
+        print(f"{record.vehicle_id} @ {record.lat}, {record.lon} → {record.speed_kmh} km/h")
+        conn.execute(
+            "INSERT INTO telematics_events VALUES (now(), ?, ?, ?, ?, ?)",
+            (record.vehicle_id, record.timestamp, record.lat, record.lon, record.speed_kmh)
+        )
